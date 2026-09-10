@@ -31,8 +31,8 @@ function toast(msg, type = "success") {
 }
 
 /* ---------- API ---------- */
-async function api(path, body) {
-  const opts = { method: body ? "POST" : "GET", credentials: "include" };
+async function api(path, body, method) {
+  const opts = { method: method || (body ? "POST" : "GET"), credentials: "include" };
   if (body) {
     opts.headers = { "Content-Type": "application/json" };
     opts.body = JSON.stringify(body);
@@ -109,13 +109,13 @@ async function initHome() {
   $("#btnTopup")?.addEventListener("click", () => openDlg("topupDialog"));
   $("#ctaSendBtn")?.addEventListener("click", () => openDlg("sendDialog"));
   $("#btnBlock")?.addEventListener("click", async () => {
-    const { data } = await api("/api/card");
+    const { data } = await api("/api/card", null, "POST");
     toast(data.ok ? data.message : `❌ ${data.error}`, data.ok ? "success" : "error");
     loadHome();
   });
   $("#heroLogout")?.addEventListener("click", async () => {
-    await api("/api/logout");
-    toast("👋 Tot de volgende les. Je bodeuro slaapt veilig.");
+    const { data } = await api("/api/logout", null, "POST");
+    toast(data.ok ? "👋 Tot de volgende les. Je bodeuro slaapt veilig." : `❌ ${data.error}`, data.ok ? "success" : "error");
     loadHome();
   });
 
@@ -161,8 +161,8 @@ async function loadHome() {
     : `<a class="btn btn-ghost" href="login.html">Inloggen</a>
        <a class="btn btn-primary" href="account.html">Open een rekening</a>`;
   $("#navLogout")?.addEventListener("click", async () => {
-    await api("/api/logout");
-    toast("👋 Tot de volgende les. Je bodeuro slaapt veilig.");
+    const { data } = await api("/api/logout", null, "POST");
+    toast(data.ok ? "👋 Tot de volgende les. Je bodeuro slaapt veilig." : `❌ ${data.error}`, data.ok ? "success" : "error");
     loadHome();
   });
 

@@ -54,7 +54,7 @@
 
       <div class="nav-actions">
         {% if user %}
-          <span class="user-chip" title="Ingelogd als {{ user.naam }}">👤 {{ user.naam }}</span>
+          <span class="user-chip" title="Ingelogd als {{ user.naam }}">👤 {{ user.username }}</span>
           <a class="btn btn-ghost" href="{{ url_for('logout') }}">Uitloggen</a>
         {% else %}
           <a class="btn btn-ghost" href="{{ url_for('login') }}">Inloggen</a>

@@ -38,7 +38,7 @@
   <div class="container hero-grid">
     <div class="hero-copy">
       {% if user %}
-        <p class="eyebrow-chip reveal">👤 {{ user.naam }} · Klantnummer {{ user.klantnr }}</p>
+        <p class="eyebrow-chip reveal">👤 {{ user.naam }} · {{ user.klantnr }}{% if user.is_admin %} · 👑 admin{% endif %}</p>
         <h1 class="reveal">Welkom terug, <span class="gold">{{ user.naam.split(' ')|first }}</span>.</h1>
         <p class="lead reveal">
           Jouw bodeuro-saldo staat in het overzicht hieronder — zichtbaar voor jou
@@ -147,8 +147,13 @@
       <!-- Saldo -->
       <div class="panel reveal">
         <p class="panel-label">Totaal saldo</p>
+        {% if user.is_admin %}
+        <p class="saldo"><span class="gold">∞</span> <span class="saldo-cur">BDE</span></p>
+        <p class="saldo-equiv">oneindig · <span class="pos">alleen jij ziet dit cijfer</span></p>
+      {% else %}
         <p class="saldo"><span id="saldo" data-value="{{ user.saldo }}">0,00</span> <span class="saldo-cur">BDE</span></p>
         <p class="saldo-equiv">= € {{ user.saldo|geld }} · <span class="pos">je bent miljonair in respect</span></p>
+      {% endif %}
 
         <div class="quick-actions">
           <button class="quick-action" id="btnSend">
@@ -313,15 +318,16 @@
     <p class="modal-eyebrow">Stuur bodeuro</p>
     <h3>Naar wie gaat het?</h3>
     <label class="field">
-      <span>Ontvanger</span>
-      <input type="text" name="ontvanger" required maxlength="40" placeholder="bijv. de klas">
+      <span>Gebruikersnaam van de ontvanger</span>
+      <input type="text" name="ontvanger" required maxlength="20" pattern="[a-zA-Z0-9_]{3,20}"
+             placeholder="bijv. demo" value="{{ request.form.ontvanger or '' }}">
     </label>
     <label class="field">
       <span>Bedrag (BDE)</span>
       <input type="number" name="bedrag" required min="0.01" step="0.01" placeholder="bijv. 10,00">
     </label>
     <button class="btn btn-primary btn-block" type="submit">📤 Sturen</button>
-    <p class="modal-fine">Saldo: {{ user.saldo|geld }} BDE · overdracht direct na de bel</p>
+    <p class="modal-fine">Saldo: {% if user.is_admin %}∞ BDE{% else %}{{ user.saldo|geld }} BDE{% endif %} · overdracht direct na de bel</p>
   </form>
 </dialog>
 

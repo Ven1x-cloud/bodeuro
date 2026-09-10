@@ -800,3 +800,17 @@ button { font: inherit; cursor: pointer; color: inherit; background: none; borde
 @media (max-width: 1000px) {
   .locked-grid { grid-template-columns: 1fr; }
 }
+
+/* ============ bodeuro v3 — 2FA & verificatie ============ */
+.code-input {
+  text-align: center;
+  font-size: 1.5rem;
+  letter-spacing: 0.5em;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+.field-hint { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+.demo-code { color: var(--gold-2); font-family: var(--font-mono); letter-spacing: 0.2em; }
+.resend-form { margin-top: 18px; }
+.link-like { color: var(--gold); font-size: 0.9rem; font-weight: 600; }
+.link-like:hover { text-decoration: underline; }

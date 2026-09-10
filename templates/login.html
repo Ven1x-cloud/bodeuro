@@ -3,25 +3,53 @@
 {% block content %}
 <section class="auth-section">
   <div class="panel auth-card">
-    <p class="modal-eyebrow">bodeuro online</p>
-    <h2>Inloggen</h2>
-    <p class="auth-sub">Jouw saldo, jouw kaart, jouw bodeuro. Alleen met jouw naam en secrete code.</p>
-    <form method="post" action="{{ url_for('login') }}" class="auth-form">
-      <label class="field">
-        <span>Naam</span>
-        <input type="text" name="naam" required autofocus maxlength="40"
-               placeholder="bijv. Demo" value="{{ request.form.naam or '' }}">
-      </label>
-      <label class="field">
-        <span>Secrete code</span>
-        <input type="password" name="code" required maxlength="64" placeholder="••••">
-      </label>
-      <button class="btn btn-primary btn-block btn-lg" type="submit">Inloggen</button>
-    </form>
-    <p class="auth-alt">Nog geen rekening? <a class="link" href="{{ url_for('account') }}">Open er een →</a></p>
-    <div class="demo-hint">
-      🧪 Proefrekening: naam <b>Demo</b> · code <b>bodeuro</b>
-    </div>
+    {% if step == 2 %}
+      <p class="modal-eyebrow">Stap 2 van 2</p>
+      <h2>Code uit je inbox</h2>
+      <p class="auth-sub">
+        We hebben een 6-cijferige code naar je email gestuurd.
+        Voer hem in om in te loggen.
+      </p>
+      <form method="post" action="{{ url_for('login_step2') }}" class="auth-form">
+        <label class="field">
+          <span>Je inlogcode</span>
+          <input class="code-input" type="text" name="code" required autofocus
+                 inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="______">
+        </label>
+        <button class="btn btn-primary btn-block btn-lg" type="submit">Inloggen</button>
+      </form>
+      {% if not smtp_ready %}
+        {% if demo_code %}
+          <div class="demo-hint">🧪 Demo-modus (SMTP nog niet ingesteld): je code is <b class="demo-code">{{ demo_code }}</b></div>
+        {% else %}
+          <div class="demo-hint">🧪 Demo-modus: log eerst in (stap 1) dan verschijnt je code hier.</div>
+        {% endif %}
+      {% endif %}
+      <p class="auth-alt">Verkeerde code of verlopen? <a class="link" href="{{ url_for('login') }}">Opnieuw inloggen →</a></p>
+    {% else %}
+      <p class="modal-eyebrow">Stap 1 van 2 · bodeuro online</p>
+      <h2>Inloggen</h2>
+      <p class="auth-sub">
+        Jouw saldo, jouw kaart, jouw bodeuro. Alleen met jouw
+        gebruikersnaam, wachtwoord én een code uit je inbox.
+      </p>
+      <form method="post" action="{{ url_for('login_step1') }}" class="auth-form">
+        <label class="field">
+          <span>Gebruikersnaam</span>
+          <input type="text" name="username" required autofocus maxlength="20"
+                 placeholder="bijv. demo" value="{{ request.form.username or '' }}">
+        </label>
+        <label class="field">
+          <span>Wachtwoord</span>
+          <input type="password" name="password" required maxlength="64" placeholder="••••••">
+        </label>
+        <button class="btn btn-primary btn-block btn-lg" type="submit">Verder → code per email</button>
+      </form>
+      <p class="auth-alt">Nog geen rekening? <a class="link" href="{{ url_for('account') }}">Open er een →</a></p>
+      <div class="demo-hint">
+        🧪 Proefrekening: gebruikersnaam <b>demo</b> · wachtwoord <b>bodeuro</b>
+      </div>
+    {% endif %}
   </div>
 </section>
 {% endblock %}

@@ -814,3 +814,10 @@ button { font: inherit; cursor: pointer; color: inherit; background: none; borde
 .resend-form { margin-top: 18px; }
 .link-like { color: var(--gold); font-size: 0.9rem; font-weight: 600; }
 .link-like:hover { text-decoration: underline; }
+
+/* bodeuro v4 — API-frontend extra's */
+.user-rows { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.user-row { display: flex; justify-content: space-between; gap: 12px; font-size: 0.86rem; }
+.user-row span:first-child { color: var(--muted); }
+.user-row span:last-child { font-weight: 600; text-align: right; word-break: break-all; }
+.toast-error { border-left-color: var(--red); }

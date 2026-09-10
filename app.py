@@ -1,16 +1,11 @@
-"""bodeuro — de bank van de beste leraar ter wereld.
+"""bodeuro — backend (Flask + SQLite) op PythonAnywhere.
 
-Flask + SQLite: volledige backend op PythonAnywhere.
-
-- Rekening openen: naam + gebruikersnaam + email + wachtwoord,
-  met email-verificatie (6-cijferige code).
-- Inloggen: gebruikersnaam + wachtwoord, daarna 6-cijferige code
-  per email (2FA). Klopt de code? Ingelogd. Nee? Opnieuw inloggen.
-- Bodeuro sturen op de gebruikersnaam van de ontvanger.
-- Admin-account: oneindig saldo, oneindig sturen — alleen voor
-  de admin zelf zichtbaar.
-- Demo-modus: zonder SMTP-instellingen worden codes op het scherm
-  getoond (zo kan alles getest worden zonder echte emails).
+Architectuur:
+- GitHub Pages serveert de statische frontend (map `docs/`)
+- Deze Flask-app is de backend: JSON-API onder /api/*, met sessie
+  cookies + CORS zodat de frontend cross-origin mag praten
+- Deze app serveert `docs/` óók zelf, zodat de PythonAnywhere-URL
+  als fallback gewoon blijft werken (zelfde frontend, zelfde domein)
 """
 import hashlib
 import json
@@ -24,8 +19,9 @@ from datetime import datetime, timedelta
 from email.message import EmailMessage
 from pathlib import Path
 
-from flask import (Flask, flash, g, redirect, render_template, request,
-                   send_from_directory, session, url_for)
+from flask import (Flask, after_this_request, flash, g, jsonify, redirect,
+                   request, send_from_directory, session, url_for)
+from werkzeug.exceptions import abort
 
 BASE = Path(__file__).resolve().parent
 DATA = BASE / "data"
@@ -33,6 +29,7 @@ DB_PATH = DATA / "bodeuro.db"
 SECRET_PATH = DATA / "secret.key"
 SMTP_PATH = DATA / "smtp.json"
 ADMIN_PW_PATH = DATA / "admin_password.txt"
+FRONTEND_DIR = BASE / "docs"
 
 CODE_MINUTES = 10
 USERNAME_RE = re.compile(r"^[a-z0-9_]{3,20}$")
@@ -52,6 +49,37 @@ def load_secret():
 
 
 app.secret_key = load_secret()
+
+# Cookies mogen cross-site (GitHub Pages -> PythonAnywhere)
+app.config.update(
+    SESSION_COOKIE_SAMESITE="None",
+    SESSION_COOKIE_SECURE=os.environ.get("COOKIE_SECURE", "1") == "1",
+    SESSION_COOKIE_HTTPONLY=True,
+)
+
+# Wie mag onze API cross-origin oproepen?
+ALLOWED_ORIGINS = {
+    "https://ven1x-cloud.github.io",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+}
+_extra = os.environ.get("CORS_ORIGIN", "")
+if _extra.strip():
+    ALLOWED_ORIGINS.add(_extra.strip())
+
+
+@app.after_request
+def add_cors(resp):
+    origin = request.headers.get("Origin", "")
+    if origin in ALLOWED_ORIGINS:
+        resp.headers["Access-Control-Allow-Origin"] = origin
+        resp.headers["Access-Control-Allow-Credentials"] = "true"
+        resp.headers.add("Vary", "Origin")
+        if request.method == "OPTIONS":
+            resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+            resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return resp
+
 
 MAANDEN = {1: "jan", 2: "feb", 3: "mrt", 4: "apr", 5: "mei", 6: "jun",
            7: "jul", 8: "aug", 9: "sep", 10: "okt", 11: "nov", 12: "dec"}
@@ -126,15 +154,12 @@ def init_db():
         used INTEGER NOT NULL DEFAULT 0
     );
     """)
-    # Migratie: oude databases zonder de nieuwe kolommen
     cols = [r[1] for r in conn.execute("PRAGMA table_info(accounts)")]
     for col, default in (("username", "''"), ("email", "''"),
                          ("is_admin", "0"), ("verified", "0")):
         if col not in cols:
             conn.execute(f"ALTER TABLE accounts ADD COLUMN {col} {default}")
     conn.commit()
-
-    # Oude accounts (vóór de gebruikersnaam-tijd) een login geven
     conn.execute(
         "UPDATE accounts SET "
         "username = lower(replace(naam, ' ', '_')), "
@@ -146,7 +171,6 @@ def init_db():
 
     n = conn.execute("SELECT COUNT(*) FROM accounts").fetchone()[0]
     if n == 0:
-        # Proefrekening: username "demo", wachtwoord "bodeuro"
         salt = secrets.token_hex(16)
         conn.execute(
             "INSERT INTO accounts (naam, username, email, klas, salt, code_hash, "
@@ -171,13 +195,7 @@ def init_db():
         )
         conn.commit()
 
-    admin_exists = conn.execute(
-        "SELECT id FROM accounts WHERE username = 'admin' COLLATE NOCASE"
-    ).fetchone()
-    if admin_exists is None:
-        # Admin: oneindig saldo (only voor de admin zelf zichtbaar).
-        # Het wachtwoord is willekeurig en staat in data/admin_password.txt
-        # (dat bestand staat in .gitignore en is dus niet openbaar).
+    if conn.execute("SELECT id FROM accounts WHERE username = 'admin' COLLATE NOCASE").fetchone() is None:
         admin_pw = "BD-" + "".join(
             secrets.choice("abcdefghjkmnpqrstuvwxyz23456789") for _ in range(12)
         )
@@ -191,8 +209,7 @@ def init_db():
         )
         conn.commit()
         ADMIN_PW_PATH.write_text(admin_pw)
-        print(f"[bodeuro] admin wachtwoord gegenereerd: {admin_pw} "
-              f"(opgeslagen in {ADMIN_PW_PATH})")
+        print(f"[bodeuro] admin wachtwoord gegenereerd: {admin_pw}")
 
     conn.close()
 
@@ -222,7 +239,6 @@ def smtp_ready():
 
 
 def send_mail(to, subject, text):
-    """Stuur een email. Zonder SMTP-config → demo-modus (code op scherm)."""
     if not smtp_ready():
         return False, "demo"
     cfg = smtp_cfg()
@@ -252,7 +268,7 @@ def issue_code(account, purpose, subject, body_template):
               (account["id"], purpose, salt, hash_code(code, salt), exp))
     d.commit()
     ok, how = send_mail(account["email"], subject,
-                         body_template.replace("{code}", code))
+                        body_template.replace("{code}", code))
     if how == "demo":
         session[f"demo_code_{purpose}"] = code
     return code, how
@@ -283,23 +299,9 @@ def current_user():
     return db().execute("SELECT * FROM accounts WHERE id = ?", (uid,)).fetchone()
 
 
-@app.context_processor
-def inject_globals():
-    return {"user": current_user(), "smtp_ready": smtp_ready()}
-
-
 def geld(x):
     s = f"{float(x):,.2f}"
     return s.replace(",", "§").replace(".", ",").replace("§", ".")
-
-
-def datum(iso):
-    dt = datetime.fromisoformat(iso)
-    return f"{dt.day} {MAANDEN[dt.month]} {dt.year}"
-
-
-def tijd(iso):
-    return datetime.fromisoformat(iso).strftime("%H:%M")
 
 
 def parse_bedrag(raw):
@@ -324,138 +326,77 @@ def bump_fails():
     return False
 
 
-app.jinja_env.filters["geld"] = geld
-app.jinja_env.filters["datum"] = datum
-app.jinja_env.filters["tijd"] = tijd
+def get_json():
+    return request.get_json(silent=True) or {}
 
 
-# ---------- routes ----------
+def tx_row(t):
+    when = f"{datetime.fromisoformat(t['created_at']).day} " \
+           f"{MAANDEN[datetime.fromisoformat(t['created_at']).month]} " \
+           f"{datetime.fromisoformat(t['created_at']).year} · " \
+           f"{t['created_at'][11:16]}"
+    if t["context"]:
+        when += f" · {t['context']}"
+    return {
+        "omschrijving": t["omschrijving"],
+        "bedrag": t["bedrag"],
+        "icon": t["icon"],
+        "when": when,
+    }
 
-@app.get("/")
-def index():
+
+# ---------- API ----------
+
+@app.get("/api/me")
+def api_me():
     u = current_user()
-    txs = []
-    if u is not None:
-        txs = db().execute(
-            "SELECT * FROM transactions WHERE account_id = ? ORDER BY id DESC LIMIT 6",
-            (u["id"],),
-        ).fetchall()
-    return render_template("index.html", txs=txs)
+    if u is None:
+        return jsonify(user=None, txs=[], smtp_ready=smtp_ready())
+    txs = [tx_row(t) for t in db().execute(
+        "SELECT * FROM transactions WHERE account_id = ? ORDER BY id DESC LIMIT 6",
+        (u["id"],)).fetchall()]
+    user = {
+        "naam": u["naam"],
+        "username": u["username"],
+        "email": u["email"],
+        "klas": u["klas"],
+        "is_admin": bool(u["is_admin"]),
+        "card_number": u["card_number"],
+        "klantnr": u["klantnr"],
+        "saldo": u["saldo"],
+        "card_blocked": bool(u["card_blocked"]),
+    }
+    return jsonify(user=user, txs=txs, smtp_ready=smtp_ready())
 
 
-@app.get("/inloggen")
-def login():
+@app.post("/api/signup")
+def api_signup():
     if session.get("user_id"):
-        return redirect(url_for("index"))
-    if session.get("pending_login"):
-        demo = session.get("demo_code_login") if not smtp_ready() else None
-        return render_template("login.html", step=2, demo_code=demo)
-    return render_template("login.html", step=1)
-
-
-@app.post("/inloggen")
-def login_step1():
-    if session.get("user_id"):
-        return redirect(url_for("index"))
-    if is_locked():
-        flash("⏳ Te veel pogingen. Even pauze (5 minuten) — de leraar kijkt niet mee, "
-              "maar het stelsel wel.", "error")
-        return redirect(url_for("login"))
-    username = request.form.get("username", "").strip().lower()
-    password = request.form.get("password", "")
-    row = db().execute(
-        "SELECT * FROM accounts WHERE username = ? COLLATE NOCASE", (username,)
-    ).fetchone()
-    if row is None or row["code_hash"] != hash_code(password, row["salt"]):
-        bump_fails()
-        flash("❌ Foute gebruikersnaam of wachtwoord.", "error")
-        return redirect(url_for("login"))
-    if not row["verified"]:
-        session["verify_email_hint"] = row["email"]
-        flash("Je email is nog niet geverifieerd. Dat kan met één code.", "error")
-        return redirect(url_for("verify"))
-    if row["is_admin"]:
-        # De admin heeft geen email op naam — de 2e stap wordt overgeslagen.
-        session["user_id"] = row["id"]
-        session.pop("pending_login", None)
-        session.pop("login_fails", None)
-        flash("👑 Welkom, admin. Oneindig saldo geactiveerd (voor jou alleen zichtbaar).", "success")
-        return redirect(url_for("index"))
-    issue_code(
-        row, "login",
-        "Jouw bodeuro inlogcode",
-        f"Hi {row['naam']},\n\n"
-        f"Jouw 6-cijferige bodeuro inlogcode is: "
-        f"{'' if False else 'zie onder'}\n\n"
-        f"Deze code werkt {CODE_MINUTES} minuten. Niemand anders mag hem gebruiken.\n\n"
-        f"— De bodeuro, de bank van de beste leraar ter wereld",
-    )
-    session["pending_login"] = row["id"]
-    flash("📧 Code verstuurd naar je email. Voer hem in om in te loggen.", "success")
-    return redirect(url_for("login"))
-
-
-@app.post("/inloggen/code")
-def login_step2():
-    uid = session.pop("pending_login", None)
-    code = request.form.get("code", "").strip()
-    if uid and check_code(uid, "login", code):
-        session["user_id"] = uid
-        session.pop("demo_code_login", None)
-        session.pop("login_fails", None)
-        flash("👋 Je bent ingelogd. Welkom terug bij je bodeuro!", "success")
-        return redirect(url_for("index"))
-    flash("❌ Die code is niet juist (of verlopen). Log opnieuw in.", "error")
-    return redirect(url_for("login"))
-
-
-@app.get("/uitloggen")
-def logout():
-    session.clear()
-    flash("👋 Tot de volgende les. Je bodeuro slaapt veilig.", "success")
-    return redirect(url_for("index"))
-
-
-@app.get("/rekening-openen")
-def account():
-    if session.get("user_id"):
-        return redirect(url_for("index"))
-    return render_template("account.html")
-
-
-@app.post("/rekening-openen")
-def create_account():
-    if session.get("user_id"):
-        return redirect(url_for("index"))
-    naam = request.form.get("naam", "").strip()
-    username = request.form.get("username", "").strip().lower()
-    email = request.form.get("email", "").strip().lower()
-    password = request.form.get("password", "")
-    klas = request.form.get("klas", "").strip()
-    motivatie = request.form.get("motivatie", "").strip()[:160]
+        return jsonify(ok=False, error="Je bent al ingelogd."), 409
+    d0 = get_json()
+    naam = (d0.get("naam") or "").strip()
+    username = (d0.get("username") or "").strip().lower()
+    email = (d0.get("email") or "").strip().lower()
+    password = d0.get("password") or ""
+    klas = (d0.get("klas") or "").strip()
+    motivatie = (d0.get("motivatie") or "").strip()[:160]
 
     if len(naam) < 2:
-        flash("❌ Een naam vereist (minimaal 2 letters).", "error")
-        return redirect(url_for("account"))
+        return jsonify(ok=False, error="Een naam vereist (minimaal 2 letters).")
     if not USERNAME_RE.match(username):
-        flash("❌ Gebruikersnaam: 3 t/m 20 tekens, alleen letters, cijfers en _ (geen spaties).", "error")
-        return redirect(url_for("account"))
+        return jsonify(ok=False, error="Gebruikersnaam: 3 t/m 20 tekens, alleen letters, cijfers en _.")
     if not EMAIL_RE.match(email):
-        flash("❌ Dat is geen geldig emailadres.", "error")
-        return redirect(url_for("account"))
+        return jsonify(ok=False, error="Dat is geen geldig emailadres.")
     if len(password) < 6:
-        flash("❌ Het wachtwoord moet minimaal 6 tekens zijn.", "error")
-        return redirect(url_for("account"))
+        return jsonify(ok=False, error="Het wachtwoord moet minimaal 6 tekens zijn.")
 
     d = db()
     if d.execute("SELECT id FROM accounts WHERE username = ? COLLATE NOCASE",
                  (username,)).fetchone():
-        flash("❌ Die gebruikersnaam is al bezet. Kies een andere.", "error")
-        return redirect(url_for("account"))
+        return jsonify(ok=False, error="Die gebruikersnaam is al bezet.")
     if d.execute("SELECT id FROM accounts WHERE email = ? COLLATE NOCASE",
                  (email,)).fetchone():
-        flash("❌ Dat emailadres is al geregistreerd.", "error")
-        return redirect(url_for("account"))
+        return jsonify(ok=False, error="Dat emailadres is al geregistreerd.")
 
     salt = secrets.token_hex(16)
     cur = d.execute(
@@ -472,33 +413,23 @@ def create_account():
         "Verifieer je email bij de bodeuro",
         "Welkom bij de bodeuro!\n\n"
         "Voer deze code in om je emailadres te verifiëren:\n\n"
-        "    {code}\n\n"
+        "{code}\n\n"
         f"Deze code werkt {CODE_MINUTES} minuten.\n\n"
         "— De bodeuro, de bank van de beste leraar ter wereld",
     )
-    session["verify_email_hint"] = email
-    flash(f"📧 We hebben een 6-cijferige code gestuurd naar {email}.", "success")
-    return redirect(url_for("verify"))
+    resp = {"ok": True, "message": f"📧 We stuurden een code naar {email}."}
+    if not smtp_ready():
+        resp["demo_code"] = session.get("demo_code_verify", "")
+    return jsonify(resp), 201
 
 
-@app.get("/verifiëren")
-def verify():
+@app.post("/api/verify")
+def api_verify():
     if session.get("user_id"):
-        return redirect(url_for("index"))
-    demo = session.get("demo_code_verify") if not smtp_ready() else None
-    return render_template(
-        "verify.html",
-        email=session.get("verify_email_hint", ""),
-        demo_code=demo,
-    )
-
-
-@app.post("/verifiëren")
-def verify_post():
-    if session.get("user_id"):
-        return redirect(url_for("index"))
-    email = request.form.get("email", "").strip().lower()
-    code = request.form.get("code", "").strip()
+        return jsonify(ok=False, error="Je bent al ingelogd.")
+    d0 = get_json()
+    email = (d0.get("email") or "").strip().lower()
+    code = (d0.get("code") or "").strip()
     account = db().execute(
         "SELECT * FROM accounts WHERE email = ? COLLATE NOCASE", (email,)
     ).fetchone()
@@ -515,78 +446,128 @@ def verify_post():
         )
         d.commit()
         session["user_id"] = account["id"]
-        session.pop("verify_email_hint", None)
         session.pop("demo_code_verify", None)
-        flash(f"🎉 Email geverifieerd! Welkomstbonus van 100,00 BDE gestort. "
-              f"Welkom, {account['naam']}!", "success")
-        return redirect(url_for("index"))
-    flash("❌ Code niet juist. Check je inbox (spam?) of request een nieuwe code.", "error")
-    return redirect(url_for("verify"))
+        return jsonify(ok=True, message=f"🎉 Email geverifieerd! Welkomstbonus van "
+                                        f"100,00 BDE gestort. Welkom, {account['naam']}!")
+    return jsonify(ok=False, error="Code niet juist. Check je inbox (spam?) of "
+                                   "request een nieuwe code.")
 
 
-@app.post("/verifiëren/resend")
-def verify_resend():
+@app.post("/api/verify/resend")
+def api_verify_resend():
     last = session.get("last_resend", 0)
     if time.time() - last < 60:
-        flash("⏳ Even geduld — een code is zojuist verstuurd (per 60 sec max. 1x).", "error")
-        return redirect(url_for("verify"))
-    email = request.form.get("email", "").strip().lower()
+        return jsonify(ok=False, error="⏳ Even geduld — max. 1 code per minuut.")
+    email = (get_json().get("email") or "").strip().lower()
     account = db().execute(
         "SELECT * FROM accounts WHERE email = ? COLLATE NOCASE", (email,)
     ).fetchone()
     if account is None:
-        flash("❌ We kennen dat emailadres niet (meer).", "error")
-    else:
-        session["last_resend"] = time.time()
-        issue_code(
-            account, "verify",
-            "Nieuwe verificatiecode voor de bodeuro",
-            "Hier is je nieuwe verificatiecode (de oude is ongeldig):\n\n"
-            "    {code}\n\n"
-            f"Deze code werkt {CODE_MINUTES} minuten.\n\n"
-            "— De bodeuro",
-        )
-        session["verify_email_hint"] = account["email"]
-        flash(f"📧 Nieuwe code verstuurd naar {account['email']}.", "success")
-    return redirect(url_for("verify"))
+        return jsonify(ok=False, error="We kennen dat emailadres niet (meer).")
+    session["last_resend"] = time.time()
+    issue_code(
+        account, "verify",
+        "Nieuwe verificatiecode voor de bodeuro",
+        "Hier is je nieuwe verificatiecode (de oude is ongeldig):\n\n"
+        "{code}\n\n"
+        f"Deze code werkt {CODE_MINUTES} minuten.\n\n"
+        "— De bodeuro",
+    )
+    session["verify_email_hint"] = account["email"]
+    resp = {"ok": True, "message": f"📧 Nieuwe code verstuurd naar {account['email']}."}
+    if not smtp_ready():
+        resp["demo_code"] = session.get("demo_code_verify", "")
+    return jsonify(resp)
 
 
-@app.post("/sturen")
-def sturen():
+@app.post("/api/login")
+def api_login():
+    if session.get("user_id"):
+        return jsonify(ok=True, step="done", message="Je bent al ingelogd.")
+    if is_locked():
+        return jsonify(ok=False, error="⏳ Te veel pogingen. Even pauze (5 minuten).")
+    d0 = get_json()
+    username = (d0.get("username") or "").strip().lower()
+    password = d0.get("password") or ""
+    row = db().execute(
+        "SELECT * FROM accounts WHERE username = ? COLLATE NOCASE", (username,)
+    ).fetchone()
+    if row is None or row["code_hash"] != hash_code(password, row["salt"]):
+        bump_fails()
+        return jsonify(ok=False, error="Foute gebruikersnaam of wachtwoord.")
+    if not row["verified"]:
+        session["verify_email_hint"] = row["email"]
+        return jsonify(ok=False, code="unverified",
+                       error="Je email is nog niet geverifieerd.")
+    if row["is_admin"]:
+        session["user_id"] = row["id"]
+        session.pop("pending_login", None)
+        session.pop("login_fails", None)
+        return jsonify(ok=True, step="done",
+                       message="👑 Welkom, admin. Oneindig saldo geactiveerd.")
+    issue_code(
+        row, "login",
+        "Jouw bodeuro inlogcode",
+        f"Hi {row['naam']},\n\n"
+        "Jouw 6-cijferige bodeuro inlogcode is:\n\n"
+        "{code}\n\n"
+        f"Deze code werkt {CODE_MINUTES} minuten. Niemand anders mag hem gebruiken.\n\n"
+        "— De bodeuro, de bank van de beste leraar ter wereld",
+    )
+    session["pending_login"] = row["id"]
+    resp = {"ok": True, "step": "code",
+            "message": "📧 Code verstuurd naar je email."}
+    if not smtp_ready():
+        resp["demo_code"] = session.get("demo_code_login", "")
+    return jsonify(resp)
+
+
+@app.post("/api/login/code")
+def api_login_code():
+    uid = session.pop("pending_login", None)
+    code = (get_json().get("code") or "").strip()
+    if uid and check_code(uid, "login", code):
+        session["user_id"] = uid
+        session.pop("demo_code_login", None)
+        session.pop("login_fails", None)
+        return jsonify(ok=True, message="👋 Je bent ingelogd.")
+    return jsonify(ok=False, error="Die code is niet juist (of verlopen). Log opnieuw in.")
+
+
+@app.post("/api/logout")
+def api_logout():
+    session.clear()
+    return jsonify(ok=True, message="👋 Tot de volgende les.")
+
+
+@app.post("/api/transfer")
+def api_transfer():
     u = current_user()
     if u is None:
-        flash("Eerst inloggen, dan bodeuro sturen. Zo werkt het.", "error")
-        return redirect(url_for("login"))
+        return jsonify(ok=False, error="Eerst inloggen, dan bodeuro sturen.")
     if u["card_blocked"]:
-        flash("🚫 Je kaart is geblokkeerd — zet hem eerst weer vrij.", "error")
-        return redirect(url_for("index"))
-    ontvanger = request.form.get("ontvanger", "").strip().lower()
-    bedrag = parse_bedrag(request.form.get("bedrag"))
+        return jsonify(ok=False, error="🚫 Je kaart is geblokkeerd — zet hem eerst weer vrij.")
+    d0 = get_json()
+    ontvanger = (d0.get("ontvanger") or "").strip().lower()
+    bedrag = parse_bedrag(d0.get("bedrag"))
     if not USERNAME_RE.match(ontvanger):
-        flash("❌ Vul de gebruikersnaam van de ontvanger in.", "error")
-        return redirect(url_for("index"))
+        return jsonify(ok=False, error="Vul de gebruikersnaam van de ontvanger in.")
     if bedrag is None:
-        flash("❌ Geen geldig bedrag ingevuld.", "error")
-        return redirect(url_for("index"))
+        return jsonify(ok=False, error="Geen geldig bedrag ingevuld.")
     r = db().execute(
         "SELECT * FROM accounts WHERE username = ? COLLATE NOCASE", (ontvanger,)
     ).fetchone()
     if r is None:
-        flash(f"❌ We kennen geen account met gebruikersnaam “{ontvanger}”.", "error")
-        return redirect(url_for("index"))
+        return jsonify(ok=False, error=f"We kennen geen account met gebruikersnaam “{ontvanger}”.")
     if r["id"] == u["id"]:
-        flash("Je kunt niet naar jezelf sturen — de leraar telt dat niet als respect.", "error")
-        return redirect(url_for("index"))
-
+        return jsonify(ok=False, error="Je kunt niet naar jezelf sturen — de leraar "
+                                       "telt dat niet als respect.")
     d = db()
     if not u["is_admin"]:
         if bedrag > u["saldo"]:
-            flash(f"⚠️ Saldo onvoldoende: je hebt {geld(u['saldo'])} BDE. "
-                  "De leraar keurt geen overschrijdingen goed.", "error")
-            return redirect(url_for("index"))
+            return jsonify(ok=False, error=f"⚠️ Saldo onvoldoende: je hebt {geld(u['saldo'])} BDE.")
         d.execute("UPDATE accounts SET saldo = saldo - ? WHERE id = ?",
                   (bedrag, u["id"]))
-    # Iedereen (ook de admin) ontvangt gewoon op zijn eigen saldo
     d.execute("UPDATE accounts SET saldo = saldo + ? WHERE id = ?",
               (bedrag, r["id"]))
     d.execute(
@@ -602,21 +583,17 @@ def sturen():
          f"van {u['username']}", now_iso()),
     )
     d.commit()
-    flash(f"✅ {geld(bedrag)} BDE gestuurd naar {r['naam']}. "
-          "De leraar heeft er nota van genomen.", "success")
-    return redirect(url_for("index"))
+    return jsonify(ok=True, message=f"✅ {geld(bedrag)} BDE gestuurd naar {r['naam']}.")
 
 
-@app.post("/opwaarderen")
-def opwaarderen():
+@app.post("/api/topup")
+def api_topup():
     u = current_user()
     if u is None:
-        flash("Eerst inloggen, dan opwaarderen.", "error")
-        return redirect(url_for("login"))
-    bedrag = parse_bedrag(request.form.get("bedrag"))
+        return jsonify(ok=False, error="Eerst inloggen, dan opwaarderen.")
+    bedrag = parse_bedrag(get_json().get("bedrag"))
     if bedrag is None or bedrag > 1000:
-        flash("Kies een bedrag tussen 1 en 1000 BDE (betaalbaar in complimenten).", "error")
-        return redirect(url_for("index"))
+        return jsonify(ok=False, error="Kies een bedrag tussen 1 en 1000 BDE.")
     d = db()
     d.execute("UPDATE accounts SET saldo = saldo + ? WHERE id = ?", (bedrag, u["id"]))
     d.execute(
@@ -626,36 +603,47 @@ def opwaarderen():
         (u["id"], bedrag, now_iso()),
     )
     d.commit()
-    flash(f"💳 {geld(bedrag)} BDE opgewaardeerd. De complimenten zijn verrekend.", "success")
-    return redirect(url_for("index"))
+    return jsonify(ok=True, message=f"💳 {geld(bedrag)} BDE opgewaardeerd.")
 
 
-@app.post("/kaart")
-def kaart():
+@app.post("/api/card")
+def api_card():
     u = current_user()
     if u is None:
-        flash("Eerst inloggen, dan kaartzaken.", "error")
-        return redirect(url_for("login"))
+        return jsonify(ok=False, error="Eerst inloggen, dan kaartzaken.")
     new_state = 0 if u["card_blocked"] else 1
     db().execute("UPDATE accounts SET card_blocked = ? WHERE id = ?",
                  (new_state, u["id"]))
     db().commit()
-    if new_state:
-        flash("🚫 Kaart geblokkeerd. De leraar is op de hoogte.", "success")
-    else:
-        flash("✅ Kaart weer vrij. Je mag betalen in waardering.", "success")
-    return redirect(url_for("index"))
+    return jsonify(
+        ok=True,
+        blocked=bool(new_state),
+        message=("🚫 Kaart geblokkeerd. De leraar is op de hoogte."
+                 if new_state else "✅ Kaart weer vrij."),
+    )
 
 
-# ---------- assets ----------
+# ---------- assets + statische frontend ----------
 
 @app.get("/images/<path:filename>")
 def images(filename):
-    return send_from_directory(BASE / "images", filename)
+    return send_from_directory(FRONTEND_DIR / "images", filename)
 
 
-# Initialiseer de database bij import (idempotent), zodat ook de
-# WSGI-server op PythonAnywhere alles automatisch klaarmaakt.
+if FRONTEND_DIR.exists():
+    @app.get("/")
+    def index_page():
+        return send_from_directory(FRONTEND_DIR, "index.html")
+
+    @app.get("/<path:filename>")
+    def frontend_files(filename):
+        if filename.startswith("api/"):
+            abort(404)
+        if (FRONTEND_DIR / filename).is_file():
+            return send_from_directory(FRONTEND_DIR, filename)
+        return send_from_directory(FRONTEND_DIR, "index.html")
+
+
 init_db()
 
 if __name__ == "__main__":

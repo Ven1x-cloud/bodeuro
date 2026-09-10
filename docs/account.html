@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rekening openen — bodeuro</title>
+  <meta name="description" content="Open een bodeuro-rekening: naam, gebruikersnaam, email en wachtwoord.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23e3b34c' stroke-width='3'/%3E%3Ctext x='32' y='40' font-family='Arial' font-size='22' font-weight='bold' fill='%23e3b34c' text-anchor='middle'%3EB%E2%82%AC%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>BDE/EUR&nbsp;<b>1,0000</b> (0,00%)</span><i>•</i>
+      <span>Stabiliteit: <b>maximaal</b></span><i>•</i>
+      <span>Rente: <b>100% dankbaarheid</b></span><i>•</i>
+      <span>Uitgegeven door: <b>2 vrienden</b></span><i>•</i>
+      <span>Ontvangen door: <b>de beste leraar ter wereld</b></span><i>•</i>
+      <span>Deposito-voorkeur: <b>complimenten</b></span><i>•</i>
+      <span>Overdraagsnelheid: <b>direct na de bel</b></span><i>•</i>
+      <span>BDE/EUR&nbsp;<b>1,0000</b> (0,00%)</span><i>•</i>
+      <span>Stabiliteit: <b>maximaal</b></span><i>•</i>
+      <span>Rente: <b>100% dankbaarheid</b></span><i>•</i>
+      <span>Uitgegeven door: <b>2 vrienden</b></span><i>•</i>
+      <span>Ontvangen door: <b>de beste leraar ter wereld</b></span><i>•</i>
+      <span>Deposito-voorkeur: <b>complimenten</b></span><i>•</i>
+      <span>Overdraagsnelheid: <b>direct na de bel</b></span><i>•</i>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="logo" href="index.html">
+        <span class="logo-mark">B<sup>€</sup></span>
+        <span class="logo-text">bodeuro</span>
+      </a>
+      <div class="nav-actions" style="margin-left:auto">
+        <a class="btn btn-ghost" href="index.html">← Terug</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <main>
+    <section class="auth-section">
+      <div class="panel auth-card auth-card-wide">
+        <p class="modal-eyebrow">bodeuro online</p>
+        <h2>Open een bodeuro-rekening</h2>
+        <p class="auth-sub">
+          Geen boetes, geen klein lettertype. Wel een welkomstbonus van
+          <b>100 BDE</b> zodra je je email hebt geverifieerd.
+        </p>
+
+        <ul class="benefits">
+          <li>📧 <span><b>Email-verificatie</b> — we sturen een 6-cijferige code; pas daarna is je rekening actief</span></li>
+          <li>🔐 <span><b>Twee-staps inloggen</b> — gebruikersnaam + wachtwoord, daarna elke keer een code per email</span></li>
+          <li>🎁 <span><b>100 BDE welkomstbonus</b> — direct gestort na verificatie</span></li>
+        </ul>
+
+        <form id="signupForm">
+          <label class="field">
+            <span>Naam</span>
+            <input type="text" name="naam" required maxlength="40"
+                   placeholder="Zo noemt de leraar je">
+          </label>
+          <label class="field">
+            <span>Gebruikersnaam</span>
+            <input type="text" name="username" required maxlength="20"
+                   pattern="[a-zA-Z0-9_]{3,20}" autocomplete="username"
+                   placeholder="3 t/m 20 tekens: letters, cijfers, _">
+            <small class="field-hint">Hiermee sturen anderen bodeuro naar jou.</small>
+          </label>
+          <label class="field">
+            <span>Emailadres</span>
+            <input type="email" name="email" required maxlength="80"
+                   autocomplete="email" placeholder="jij@voorbeeld.nl">
+            <small class="field-hint">Hier komen je verificatie- en inlogcodes.</small>
+          </label>
+          <label class="field">
+            <span>Wachtwoord</span>
+            <input type="password" name="password" required minlength="6" maxlength="64"
+                   autocomplete="new-password" placeholder="minimaal 6 tekens">
+          </label>
+          <label class="field">
+            <span>Klas / afdeling <small>(optioneel)</small></span>
+            <input type="text" name="klas" maxlength="40" placeholder="bijv. 3a">
+          </label>
+          <label class="field">
+            <span>Motivatie <small>(optioneel, max. 160 tekens)</small></span>
+            <textarea name="motivatie" rows="2" maxlength="160"
+                      placeholder="Waarom wil je in bodeuro betalen?"></textarea>
+          </label>
+          <button class="btn btn-primary btn-block btn-lg" type="submit">Open mijn rekening</button>
+        </form>
+        <p class="auth-alt">Al klant? <a class="link" href="login.html">Log in →</a></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

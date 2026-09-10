@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Email verifiëren — bodeuro</title>
+  <meta name="description" content="Verifieer je emailadres met de 6-cijferige code.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23e3b34c' stroke-width='3'/%3E%3Ctext x='32' y='40' font-family='Arial' font-size='22' font-weight='bold' fill='%23e3b34c' text-anchor='middle'%3EB%E2%82%AC%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>BDE/EUR&nbsp;<b>1,0000</b> (0,00%)</span><i>•</i>
+      <span>Stabiliteit: <b>maximaal</b></span><i>•</i>
+      <span>Rente: <b>100% dankbaarheid</b></span><i>•</i>
+      <span>Uitgegeven door: <b>2 vrienden</b></span><i>•</i>
+      <span>Ontvangen door: <b>de beste leraar ter wereld</b></span><i>•</i>
+      <span>Deposito-voorkeur: <b>complimenten</b></span><i>•</i>
+      <span>Overdraagsnelheid: <b>direct na de bel</b></span><i>•</i>
+      <span>BDE/EUR&nbsp;<b>1,0000</b> (0,00%)</span><i>•</i>
+      <span>Stabiliteit: <b>maximaal</b></span><i>•</i>
+      <span>Rente: <b>100% dankbaarheid</b></span><i>•</i>
+      <span>Uitgegeven door: <b>2 vrienden</b></span><i>•</i>
+      <span>Ontvangen door: <b>de beste leraar ter wereld</b></span><i>•</i>
+      <span>Deposito-voorkeur: <b>complimenten</b></span><i>•</i>
+      <span>Overdraagsnelheid: <b>direct na de bel</b></span><i>•</i>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="logo" href="index.html">
+        <span class="logo-mark">B<sup>€</sup></span>
+        <span class="logo-text">bodeuro</span>
+      </a>
+      <div class="nav-actions" style="margin-left:auto">
+        <a class="btn btn-ghost" href="index.html">← Terug</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <main>
+    <section class="auth-section">
+      <div class="panel auth-card">
+        <p class="modal-eyebrow">bijna klaar</p>
+        <h2>Verifieer je email</h2>
+        <p class="auth-sub">
+          We hebben een 6-cijferige code naar je email gestuurd.
+          Voer hem in om je rekening te activeren — en je welkomstbonus
+          van <b>100 BDE</b> te ontvangen.
+        </p>
+        <form id="verifyForm">
+          <label class="field">
+            <span>Emailadres</span>
+            <input type="email" name="email" id="verifyEmail" required maxlength="80"
+                   placeholder="jij@voorbeeld.nl" autocomplete="email">
+          </label>
+          <label class="field">
+            <span>Verificatiecode</span>
+            <input class="code-input" type="text" name="code" required autofocus
+                   inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="______">
+          </label>
+          <button class="btn btn-primary btn-block btn-lg" type="submit">Verifiëren</button>
+        </form>
+        <div class="demo-hint" id="verifyDemo" hidden>
+          🧪 Demo-modus (SMTP nog niet ingesteld): je code is <b class="demo-code" id="verifyDemoCode"></b>
+        </div>
+        <form id="resendForm" class="resend-form">
+          <input type="email" name="email" id="resendEmail" hidden>
+          <button type="submit" class="link-like">📧 Nieuwe code versturen (max. 1x per minuut)</button>
+        </form>
+        <p class="auth-alt">Al geverifieerd? <a class="link" href="login.html">Log in →</a></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>bodeuro — de bank van de beste leraar ter wereld</title>
+  <meta name="description" content="De bodeuro: de munt van twee vrienden, gemaakt voor de beste leraar ter wereld. 1 BDE = €1,00.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23e3b34c' stroke-width='3'/%3E%3Ctext x='32' y='40' font-family='Arial' font-size='22' font-weight='bold' fill='%23e3b34c' text-anchor='middle'%3EB%E2%82%AC%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body id="top">
+
+  <!-- Koers-ticker -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>BDE/EUR&nbsp;<b>1,0000</b> (0,00%)</span><i>•</i>
+      <span>Stabiliteit: <b>maximaal</b></span><i>•</i>
+      <span>Rente: <b>100% dankbaarheid</b></span><i>•</i>
+      <span>Uitgegeven door: <b>2 vrienden</b></span><i>•</i>
+      <span>Ontvangen door: <b>de beste leraar ter wereld</b></span><i>•</i>
+      <span>Deposito-voorkeur: <b>complimenten</b></span><i>•</i>
+      <span>Overdraagsnelheid: <b>direct na de bel</b></span><i>•</i>
+      <span>BDE/EUR&nbsp;<b>1,0000</b> (0,00%)</span><i>•</i>
+      <span>Stabiliteit: <b>maximaal</b></span><i>•</i>
+      <span>Rente: <b>100% dankbaarheid</b></span><i>•</i>
+      <span>Uitgegeven door: <b>2 vrienden</b></span><i>•</i>
+      <span>Ontvangen door: <b>de beste leraar ter wereld</b></span><i>•</i>
+      <span>Deposito-voorkeur: <b>complimenten</b></span><i>•</i>
+      <span>Overdraagsnelheid: <b>direct na de bel</b></span><i>•</i>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container nav">
+      <a class="logo" href="index.html" aria-label="bodeuro home">
+        <span class="logo-mark">B<sup>€</sup></span>
+        <span class="logo-text">bodeuro</span>
+      </a>
+
+      <button class="burger" id="burger" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="main-nav" id="mainNav" aria-label="Hoofdnavigatie">
+        <a href="index.html#overzicht">Overzicht</a>
+        <a href="index.html#wisselkoers">Wisselkoers</a>
+        <a href="index.html#over">Over bodeuro</a>
+        <a href="index.html#contact">Contact</a>
+      </nav>
+
+      <div class="nav-actions" id="navActions"></div>
+    </div>
+  </header>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <div id="heroPub">
+            <p class="eyebrow-chip reveal">🛡️ Vast gekoppeld aan de euro · 1 BDE = €1,00</p>
+            <h1 class="reveal">Jouw vermogen, in de munt van <span class="gold">de klas</span>.</h1>
+            <p class="lead reveal">
+              De <strong>bodeuro</strong> is bedacht door twee vrienden — voor de beste
+              leraar ter wereld. Stuur, spaar en betaal in de stabielste munt van het
+              schoolgebouw.
+            </p>
+            <div class="hero-cta reveal">
+              <a class="btn btn-primary btn-lg" href="account.html">Open een rekening</a>
+              <a class="btn btn-ghost btn-lg" href="login.html">Inloggen</a>
+            </div>
+          </div>
+
+          <div id="heroUser" hidden>
+            <p class="eyebrow-chip reveal" id="userChipHero"></p>
+            <h1 class="reveal" id="welcomeH1"></h1>
+            <p class="lead reveal">
+              Jouw bodeuro-saldo staat in het overzicht hieronder — zichtbaar voor jou
+              en voor de leraar. Net zoals het bij een serieuze bank hoort.
+            </p>
+            <div class="hero-cta reveal">
+              <a class="btn btn-primary btn-lg" href="#overzicht">Bekijk mijn saldo</a>
+              <button class="btn btn-ghost btn-lg" id="heroLogout" type="button">Uitloggen</button>
+            </div>
+          </div>
+
+          <div class="hero-stats reveal">
+            <div class="stat">
+              <span class="stat-num">1,00</span>
+              <span class="stat-label">BDE / EUR koers</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num">2</span>
+              <span class="stat-label">Oprichters</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num">∞</span>
+              <span class="stat-label">Vertrouwen</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual reveal">
+          <div class="bankcard" id="bankcard">
+            <div class="bankcard-glow"></div>
+            <div class="card-top">
+              <span class="card-brand">bodeuro</span>
+              <svg class="contactless" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <path d="M6 8.5a7 7 0 0 1 0 7"/><path d="M9.5 6.5a11 11 0 0 1 0 11"/>
+                <path d="M13 4.5a15 15 0 0 1 0 15"/>
+              </svg>
+            </div>
+            <div class="card-chip" aria-hidden="true"></div>
+            <div class="card-number" id="cardNumber">•••• •••• •••• ••••</div>
+            <div class="card-bottom">
+              <div>
+                <span class="card-label">Kaathouder</span>
+                <span class="card-value" id="cardHolder">Na inloggen</span>
+              </div>
+              <div>
+                <span class="card-label">Afdeling</span>
+                <span class="card-value" id="cardDept">—</span>
+              </div>
+              <div class="card-code">
+                <span class="card-label">Valuta</span>
+                <span class="card-value gold">BDE</span>
+              </div>
+            </div>
+            <div class="card-blocked">KAART GEBLOKKEERD</div>
+            <div class="card-locked" id="cardLocked">🔒 DEMO · inloggen voor jouw kaart</div>
+          </div>
+
+          <div class="float-chip chip-top" id="chipPub1">
+            <span class="dot ok"></span> Jouw transacties blijven privé
+          </div>
+          <div class="float-chip chip-bottom" id="chipPub2">
+            <span class="dot up"></span> Kaart wordt na inloggen gepersonaliseerd
+          </div>
+          <div class="float-chip chip-top" id="chipUser1" hidden>
+            <span class="dot up"></span> +250 BDE · Einde-periode bonus
+          </div>
+          <div class="float-chip chip-bottom" id="chipUser2" hidden>
+            <span class="dot ok"></span> Betaling geslaagd · Klaskring
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Overzicht -->
+    <section class="section" id="overzicht">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Overzicht</p>
+          <h2 id="ovTitle">Jouw rekening, privé</h2>
+          <p class="section-sub" id="ovSub">
+            Niemand toont zomaar een saldo aan toevallige bezoekers. Log in en het
+            overzicht opent zich.
+          </p>
+        </div>
+
+        <div class="locked-grid" id="ovLocked">
+          <div class="panel locked-panel reveal">
+            <span class="locked-icon">🔒</span>
+            <h3>Jouw overzicht is privé</h3>
+            <p>
+              Een serieuze bank toont het saldo van niemand aan toevallige bezoekers.
+              Log in met jouw gebruikersnaam en secrete code — of open vandaag nog
+              jouw bodeuro-rekening met een welkomstbonus van 100 BDE.
+            </p>
+            <div class="hero-cta">
+              <a class="btn btn-primary" href="login.html">Inloggen</a>
+              <a class="btn btn-ghost" href="account.html">Open een rekening</a>
+            </div>
+          </div>
+          <div class="panel reveal" id="wisselkoers">
+            <p class="panel-label">Wisselkoers BDE / EUR</p>
+            <p class="koers">1,0000 <span class="koers-tag">stabiel</span></p>
+            <p class="saldo-equiv">dagwinst 0,00% · “vertrouwen is de beste rente”</p>
+            <svg class="koers-chart" viewBox="0 0 300 84" preserveAspectRatio="none" aria-hidden="true">
+              <line x1="0" y1="24" x2="300" y2="24" class="grid-line"/>
+              <line x1="0" y1="54" x2="300" y2="54" class="grid-line"/>
+              <line x1="0" y1="39" x2="300" y2="39" class="koers-path"/>
+              <circle cx="292" cy="39" r="4" class="koers-dot"/>
+            </svg>
+            <p class="chart-caption">Laatste 30 dagen — de meest stabiele koers van het gebouw</p>
+            <div class="goals">
+              <p class="panel-label">Spaardoelen</p>
+              <div class="goal reveal-goal">
+                <div class="goal-row"><span>Klasuitje 2026/27</span><span class="goal-num">310 / 500 BDE</span></div>
+                <div class="bar"><div class="bar-fill" data-w="62"></div></div>
+              </div>
+              <div class="goal reveal-goal">
+                <div class="goal-row"><span>Koffie-club (maandelijks)</span><span class="goal-num">85 / 100 BDE</span></div>
+                <div class="bar"><div class="bar-fill" data-w="85"></div></div>
+              </div>
+              <div class="goal reveal-goal">
+                <div class="goal-row"><span>Pensioen van de leraar</span><span class="goal-num">12.400 / 15.000 BDE</span></div>
+                <div class="bar"><div class="bar-fill" data-w="83"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overview-grid" id="ovUser" hidden>
+          <div class="panel reveal">
+            <p class="panel-label">Totaal saldo</p>
+            <p class="saldo" id="saldoWrap"><span id="saldo">0,00</span> <span class="saldo-cur">BDE</span></p>
+            <p class="saldo-equiv" id="saldoEquiv"></p>
+            <div class="quick-actions">
+              <button class="quick-action" id="btnSend" type="button">
+                <span class="qa-icon">📤</span> Stuur bodeuro
+              </button>
+              <button class="quick-action" id="btnTopup" type="button">
+                <span class="qa-icon">💳</span> Laad op
+              </button>
+              <button class="quick-action" id="btnBlock" type="button">
+                <span class="qa-icon">🔒</span> Kaart blokkeren
+              </button>
+              <button class="quick-action" id="btnHistory" type="button">
+                <span class="qa-icon">🕘</span> Historie
+              </button>
+            </div>
+            <div class="user-rows" id="userDetails"></div>
+          </div>
+
+          <div class="panel panel-wide reveal" id="transacties">
+            <div class="panel-row">
+              <p class="panel-label">Recente transacties</p>
+              <a class="link" href="#transacties">Alles</a>
+            </div>
+            <ul class="tx-list" id="txList"></ul>
+          </div>
+
+          <div class="panel reveal" id="wisselkoersUser">
+            <p class="panel-label">Wisselkoers BDE / EUR</p>
+            <p class="koers">1,0000 <span class="koers-tag">stabiel</span></p>
+            <p class="saldo-equiv">dagwinst 0,00% · “vertrouwen is de beste rente”</p>
+            <svg class="koers-chart" viewBox="0 0 300 84" preserveAspectRatio="none" aria-hidden="true">
+              <line x1="0" y1="24" x2="300" y2="24" class="grid-line"/>
+              <line x1="0" y1="54" x2="300" y2="54" class="grid-line"/>
+              <line x1="0" y1="39" x2="300" y2="39" class="koers-path"/>
+              <circle cx="292" cy="39" r="4" class="koers-dot"/>
+            </svg>
+            <p class="chart-caption">Laatste 30 dagen — de meest stabiele koers van het gebouw</p>
+            <div class="goals">
+              <p class="panel-label">Spaardoelen</p>
+              <div class="goal reveal-goal">
+                <div class="goal-row"><span>Klasuitje 2026/27</span><span class="goal-num">310 / 500 BDE</span></div>
+                <div class="bar"><div class="bar-fill" data-w="62"></div></div>
+              </div>
+              <div class="goal reveal-goal">
+                <div class="goal-row"><span>Koffie-club (maandelijks)</span><span class="goal-num">85 / 100 BDE</span></div>
+                <div class="bar"><div class="bar-fill" data-w="85"></div></div>
+              </div>
+              <div class="goal reveal-goal">
+                <div class="goal-row"><span>Pensioen van de leraar</span><span class="goal-num">12.400 / 15.000 BDE</span></div>
+                <div class="bar"><div class="bar-fill" data-w="83"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Over bodeuro -->
+    <section class="section section-alt" id="over">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Over de munt</p>
+          <h2>Wat is de bodeuro?</h2>
+          <p class="section-sub">
+            Een munt met een reden: de beste leraar ter wereld verdient een eigen valuta.
+            De bodeuro — “bode” én “euro” in één, aan elkaar geschreven, zonder dubbele e —
+            is de officiële munt van waardering.
+          </p>
+        </div>
+
+        <div class="features">
+          <div class="feature reveal">
+            <span class="feature-icon">🛡️</span>
+            <h3>1:1 aan de euro</h3>
+            <p>1 BDE = €1,00. Altijd. Volatiliteit is hier vreemd; stabiliteit is hier huismuziek.</p>
+          </div>
+          <div class="feature reveal">
+            <span class="feature-icon">🤝</span>
+            <h3>Gemaakt door 2 vrienden</h3>
+            <p>Gedacht, ontworpen en officieel uitgegeven door twee vrienden die één ding zeker wisten.</p>
+          </div>
+          <div class="feature reveal">
+            <span class="feature-icon">🏆</span>
+            <h3>Voor de beste leraar</h3>
+            <p>Elke bodeuro draagt de waarde van oneindig veel doorgegeven kennis, geduld en goede uitleg.</p>
+          </div>
+        </div>
+
+        <!-- Foto's: docs/images/founder-1.jpg, docs/images/teacher.jpg, docs/images/founder-2.jpg -->
+        <div class="founders">
+          <div class="founder reveal">
+            <div class="avatar" data-initial="V">
+              <span>V</span>
+              <img src="images/founder-1.jpg" alt="Foto oprichter 1" loading="lazy" onerror="this.remove()">
+            </div>
+            <h3>Oprichter I</h3>
+            <p class="founder-role">Mede-bedenker · 50% van de munt</p>
+          </div>
+
+          <div class="founder founder-honor reveal">
+            <span class="honor-badge">🏆 Eerbeton</span>
+            <div class="avatar avatar-lg" data-initial="★">
+              <span>★</span>
+              <img src="images/teacher.jpg" alt="Foto van de beste leraar ter wereld" loading="lazy" onerror="this.remove()">
+            </div>
+            <h3>De beste leraar ter wereld</h3>
+            <p class="founder-role">Officieel geldontvanger · 100% van de respect-tokko</p>
+          </div>
+
+          <div class="founder reveal">
+            <div class="avatar" data-initial="V">
+              <span>V</span>
+              <img src="images/founder-2.jpg" alt="Foto oprichter 2" loading="lazy" onerror="this.remove()">
+            </div>
+            <h3>Oprichter II</h3>
+            <p class="founder-role">Mede-bedenker · 50% van de munt</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section" id="rekening">
+      <div class="container">
+        <div class="cta reveal">
+          <div class="cta-inner">
+            <div id="ctaPub">
+              <h2>Klaar om in bodeuro te denken?</h2>
+              <p>
+                Open je rekening vandaag nog. Toelatingseisen: respect voor de leraar
+                én de wil om te geloven dat 1 BDE = €1,00.
+              </p>
+              <a class="btn btn-primary btn-lg" href="account.html">Open een bodeuro-rekening</a>
+              <p class="cta-fine">Geen boetes. Geen klein lettertype. Alleen waardering.</p>
+            </div>
+            <div id="ctaUser" hidden>
+              <h2>Jouw bodeuro-rekening is actief</h2>
+              <p id="ctaUserText"></p>
+              <button class="btn btn-primary btn-lg" id="ctaSendBtn" type="button">📤 Stuur bodeuro</button>
+              <p class="cta-fine">De leraar ziet elke overdracht. Direct na de bel.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer" id="contact">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="logo" href="index.html">
+          <span class="logo-mark">B<sup>€</sup></span>
+          <span class="logo-text">bodeuro</span>
+        </a>
+        <p>De munt van de klas. Gemaakt met respect, door twee vrienden, voor de beste leraar ter wereld.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="index.html#overzicht">Overzicht</a>
+        <a href="index.html#overzicht">Transacties</a>
+        <a href="index.html#wisselkoers">Wisselkoers</a>
+      </div>
+      <div class="footer-col">
+        <h4>Bedrijf</h4>
+        <a href="index.html#over">Over bodeuro</a>
+        <a href="index.html#over">Oprichters</a>
+        <a href="account.html">Rekening openen</a>
+      </div>
+      <div class="footer-col">
+        <h4>Juridisch</h4>
+        <a href="index.html#contact">Disclaimer</a>
+        <a href="index.html#contact">Privacy: we delen niets</a>
+        <a href="index.html#wisselkoers">Koersbeleid (1,00)</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>© 2026 bodeuro · 1 BDE = €1,00</p>
+      <p class="disclaimer">De bodeuro is geen echt geld — wel echt respect.</p>
+    </div>
+  </footer>
+
+  <!-- Dialog: sturen -->
+  <dialog id="sendDialog" class="login-modal">
+    <form class="modal-card" id="sendForm">
+      <button type="button" class="modal-close" data-close aria-label="Sluiten">×</button>
+      <p class="modal-eyebrow">Stuur bodeuro</p>
+      <h3>Naar wie gaat het?</h3>
+      <label class="field">
+        <span>Gebruikersnaam van de ontvanger</span>
+        <input type="text" name="ontvanger" required maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" placeholder="bijv. demo">
+      </label>
+      <label class="field">
+        <span>Bedrag (BDE)</span>
+        <input type="number" name="bedrag" required min="0.01" step="0.01" placeholder="bijv. 10,00">
+      </label>
+      <button class="btn btn-primary btn-block" type="submit">📤 Sturen</button>
+      <p class="modal-fine" id="sendNote"></p>
+    </form>
+  </dialog>
+
+  <!-- Dialog: opwaarderen -->
+  <dialog id="topupDialog" class="login-modal">
+    <form class="modal-card" id="topupForm">
+      <button type="button" class="modal-close" data-close aria-label="Sluiten">×</button>
+      <p class="modal-eyebrow">Opwaarderen</p>
+      <h3>Betaalbaar in complimenten</h3>
+      <label class="field">
+        <span>Bedrag (BDE)</span>
+        <select name="bedrag">
+          <option value="25">25 BDE — één compliment</option>
+          <option value="50" selected>50 BDE — twee complimenten</option>
+          <option value="100">100 BDE — een complimentenpakket</option>
+          <option value="250">250 BDE — het complete complimentenarsenaal</option>
+        </select>
+      </label>
+      <button class="btn btn-primary btn-block" type="submit">💳 Opwaarderen</button>
+      <p class="modal-fine">Complimenten worden gewaardeerd tegen de koers van 1,00.</p>
+    </form>
+  </dialog>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

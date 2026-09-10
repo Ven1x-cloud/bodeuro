@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Rekening openen — bodeuro{% endblock %}
+{% block content %}
+<section class="auth-section">
+  <div class="panel auth-card auth-card-wide">
+    <p class="modal-eyebrow">bodeuro online</p>
+    <h2>Open een bodeuro-rekening</h2>
+    <p class="auth-sub">
+      Geen boetes, geen klein lettertype. Wel een welkomstbonus van
+      <b>100 BDE</b> (in respect verrekend).
+    </p>
+
+    <ul class="benefits">
+      <li>🎁 <span><b>100 BDE welkomstbonus</b> — direct gestort, betaald in waardering</span></li>
+      <li>💳 <span><b>Jouw eigen bodeuro-kaart</b> — met jouw naam en eigen kaartnummer</span></li>
+      <li>🛡️ <span><b>Stabiel garantie</b> — 1 BDE = €1,00, nu en tot het einde van de tijd</span></li>
+    </ul>
+
+    <form method="post" action="{{ url_for('create_account') }}" class="auth-form">
+      <label class="field">
+        <span>Naam</span>
+        <input type="text" name="naam" required maxlength="40"
+               placeholder="Zo noemt de leraar je" value="{{ request.form.naam or '' }}">
+      </label>
+      <label class="field">
+        <span>Klas / afdeling <small>(optioneel)</small></span>
+        <input type="text" name="klas" maxlength="40"
+               placeholder="bijv. 3a" value="{{ request.form.klas or '' }}">
+      </label>
+      <label class="field">
+        <span>Secrete code</span>
+        <input type="password" name="code" required minlength="4" maxlength="64" placeholder="minimaal 4 tekens">
+      </label>
+      <label class="field">
+        <span>Motivatie <small>(optioneel, max. 160 tekens)</small></span>
+        <textarea name="motivatie" rows="2" maxlength="160"
+                  placeholder="Waarom wil je in bodeuro betalen?">{{ request.form.motivatie or '' }}</textarea>
+      </label>
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Open mijn rekening</button>
+    </form>
+    <p class="auth-alt">Al klant? <a class="link" href="{{ url_for('login') }}">Log in →</a></p>
+  </div>
+</section>
+{% endblock %}
